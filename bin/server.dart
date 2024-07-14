@@ -1,9 +1,8 @@
 import 'dart:io' show InternetAddress, Platform;
 
+import 'package:dev_challenge_2_dart/routes.dart' show router;
 import 'package:shelf/shelf.dart' show Pipeline, logRequests;
 import 'package:shelf/shelf_io.dart' show serve;
-
-import 'package:dev_challenge_2_dart/routes.dart' show router;
 
 void main(List<String> args) async {
   // Use any available host or container IP (usually `0.0.0.0`).
