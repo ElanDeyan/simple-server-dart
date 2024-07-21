@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:dev_challenge_2_dart/constants.dart';
+import 'package:dev_challenge_2_dart/constants/pbkdf2.dart';
 import 'package:dev_challenge_2_dart/db/server_database.dart';
 import 'package:dev_challenge_2_dart/repository/users_repository.dart';
 import 'package:drift/remote.dart';
@@ -42,8 +43,8 @@ Future<Response> createUser(Request request) async {
 
     final UsersRepository repository = ServerDatabase();
     final userAsJson = bodyAsJson as Map<String, dynamic>;
-    final (:hashedPassword, :salt) =
-        await _generatePasswordHash(userAsJson[userJsonDataKeys.password]!);
+    final (:hashedPassword, :salt) = await _generatePasswordHash(
+        pbkdf2, userAsJson[userJsonDataKeys.password]!);
 
     userAsJson.update(
       userJsonDataKeys.password,
@@ -60,7 +61,7 @@ Future<Response> createUser(Request request) async {
       await repository.createUser(User.fromJson(bodyAsJson));
     } on DriftRemoteException catch (e) {
       await (repository as ServerDatabase).close();
-      
+
       return Response.internalServerError(
         body: jsonEncode({'error': e.toString()}),
         headers: {'content-type': 'application/json'},
@@ -91,21 +92,19 @@ Map<String, String> _validateFields(
 }
 
 Future<({Uint8List hashedPassword, Uint8List salt})> _generatePasswordHash(
-    String rawPassword) async {
-  final pbkdf2 = Pbkdf2(
-    macAlgorithm: Hmac.sha256(),
-    iterations: 10000,
-    bits: 256,
-  );
-
+  Pbkdf2 pbkdf2,
+  String rawPassword,
+) async {
   final salt =
-      '${RandomStringGenerator(fixedLength: 10, hasSymbols: false)}$rawPassword';
+      RandomStringGenerator(fixedLength: 10, hasSymbols: false).generate();
 
   final secretKey = await pbkdf2.deriveKeyFromPassword(
-      password: rawPassword, nonce: salt.codeUnits);
+    password: rawPassword,
+    nonce: salt.codeUnits,
+  );
 
   return (
     hashedPassword: Uint8List.fromList(await secretKey.extractBytes()),
-    salt: Uint8List.fromList(salt.codeUnits)
+    salt: Uint8List.fromList(salt.codeUnits),
   );
 }
