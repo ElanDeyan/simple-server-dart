@@ -26,4 +26,7 @@ class ServerDatabase extends _$ServerDatabase implements UsersRepository {
 
   @override
   Future<List<User>> get allUsers => usersDao.allUsers;
+  
+  @override
+  Future<User?> userById(String email) => usersDao.userById(email);
 }
