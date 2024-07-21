@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   args: ^2.4.0
+  collection: ^1.19.0
   cryptography: ^2.7.0
   drift: ^2.19.1
   email_validator: ^3.0.0
