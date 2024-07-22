@@ -2,9 +2,12 @@ import 'dart:convert';
 import 'dart:io' show ContentType;
 
 import 'package:collection/collection.dart';
+import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:dev_challenge_2_dart/constants/headers.dart';
+import 'package:dev_challenge_2_dart/constants/jwt_issuer.dart';
 import 'package:dev_challenge_2_dart/constants/pbkdf2.dart';
 import 'package:dev_challenge_2_dart/db/server_database.dart';
+import 'package:dev_challenge_2_dart/env/env.dart';
 import 'package:dev_challenge_2_dart/repository/users_repository.dart';
 import 'package:dev_challenge_2_dart/types/json.dart';
 import 'package:email_validator/email_validator.dart';
@@ -34,35 +37,43 @@ Future<Response> login(Request request) async {
 
   final hasFieldsValueValidation = await _fieldsValueValidationData(json);
   if (hasFieldsValueValidation.isNotEmpty) {
-    return Response.badRequest(
-      body: utf8.encode(jsonEncode(hasFieldsValueValidation)),
+    return Response.unauthorized(
+      utf8.encode(jsonEncode(hasFieldsValueValidation)),
       headers: {contentType: ContentType.json.toString()},
     );
   }
 
-  final passwordMatches =
-      await _validateUserPassword(json['id'], json['password']);
+  final passwordMatches = await _validateUserPassword(
+    json['id'].toString(),
+    json['password'].toString(),
+  );
 
   if (!passwordMatches) {
-    return Response.badRequest(
-      body: utf8.encode(jsonEncode({'error': 'Wrong password'})),
+    return Response.unauthorized(
+      utf8.encode(jsonEncode({'error': 'Wrong password'})),
       headers: {contentType: ContentType.json.toString()},
     );
   }
 
+  final jwt = _generateJwt(json['id'].toString());
+
+  final token = jwt.sign(SecretKey(Env.jwtSecretKey));
+
   return Response.ok(
-    utf8.encode(jsonEncode({'msg': 'Hello login!'})),
+    utf8.encode(
+      jsonEncode({'access_token': token, 'token_type': 'jwt'}),
+    ),
     headers: {'content-type': ContentType.json.toString()},
   );
 }
 
 Future<Map<String, dynamic>> _fieldsValueValidationData(JsonMap json) async {
   return <String, dynamic>{
-    if (!EmailValidator.validate(json['id']!))
+    if (!EmailValidator.validate(json['id']!.toString()))
       'id': 'Invalid email format'
-    else if (!await _checkIfEmailExists(json['id']))
+    else if (!await _checkIfEmailExists(json['id'].toString()))
       'id': 'Email not found',
-    if (isBlank(json['password'])) 'password': 'Cannot be empty',
+    if (isBlank(json['password'].toString())) 'password': 'Cannot be empty',
   };
 }
 
@@ -97,4 +108,18 @@ Future<bool> _validateUserPassword(String email, String password) async {
   );
 
   return user.password.equals(await secretKey.extractBytes());
+}
+
+JWT _generateJwt(String email) {
+  final now = DateTime.now();
+  return JWT(
+    {
+      'key': 'value',
+      'sub': email,
+      'iat': now.millisecondsSinceEpoch,
+      'exp': now.add(const Duration(minutes: 30)).millisecondsSinceEpoch,
+    },
+    issuer: jwtIssuer,
+    subject: email,
+  );
 }
