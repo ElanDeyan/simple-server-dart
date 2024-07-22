@@ -1,4 +1,4 @@
-import 'dart:convert' show jsonDecode, utf8, jsonEncode;
+import 'dart:convert' show jsonDecode, jsonEncode, utf8;
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
@@ -10,7 +10,7 @@ import 'package:drift/remote.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:quiver/strings.dart';
 import 'package:random_string_generator/random_string_generator.dart';
-import 'package:shelf/shelf.dart' show Response, Request;
+import 'package:shelf/shelf.dart' show Request, Response;
 
 Future<Response> createUser(Request request) async {
   final body = await request.readAsString();
@@ -44,7 +44,9 @@ Future<Response> createUser(Request request) async {
     final UsersRepository repository = ServerDatabase();
     final userAsJson = bodyAsJson as Map<String, dynamic>;
     final (:hashedPassword, :salt) = await _generatePasswordHash(
-        pbkdf2, userAsJson[userJsonDataKeys.password]!);
+      pbkdf2,
+      userAsJson[userJsonDataKeys.password]!.toString(),
+    );
 
     userAsJson.update(
       userJsonDataKeys.password,
@@ -82,12 +84,16 @@ Future<Response> createUser(Request request) async {
 bool _validateEmail(String string) => EmailValidator.validate(string);
 
 Map<String, String> _validateFields(
-    String id, String password, String fullname, String birthDate) {
+  String id,
+  String password,
+  String fullname,
+  String birthDate,
+) {
   return <String, String>{
     if (!_validateEmail(id)) 'id': 'Invalid email',
     if (isBlank(password)) 'password': 'Cannot be empty or blank',
     if (isBlank(fullname)) 'fullname': 'Cannot be empty or blank',
-    if (DateTime.tryParse(birthDate) == null) 'birthdate': 'Invalid date'
+    if (DateTime.tryParse(birthDate) == null) 'birthdate': 'Invalid date',
   };
 }
 
