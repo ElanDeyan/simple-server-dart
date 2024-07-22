@@ -1,9 +1,10 @@
+import 'package:dev_challenge_2_dart/db/database_setup.dart'
+    show openConnection;
+import 'package:dev_challenge_2_dart/db/users_dao.dart' show UsersDao;
+import 'package:dev_challenge_2_dart/db/users_table.dart' show Users;
+import 'package:dev_challenge_2_dart/repository/users_repository.dart'
+    show UsersRepository;
 import 'package:drift/drift.dart';
-
-import '../repository/users_repository.dart' show UsersRepository;
-import 'database_setup.dart' show openConnection;
-import 'users_dao.dart' show UsersDao;
-import 'users_table.dart' show Users;
 
 part 'server_database.g.dart';
 
@@ -16,7 +17,7 @@ class ServerDatabase extends _$ServerDatabase implements UsersRepository {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) => m.createAll(),        
+        onCreate: (m) => m.createAll(),
       );
 
   @override
@@ -26,7 +27,7 @@ class ServerDatabase extends _$ServerDatabase implements UsersRepository {
 
   @override
   Future<List<User>> get allUsers => usersDao.allUsers;
-  
+
   @override
   Future<User?> userById(String email) => usersDao.userById(email);
 }

@@ -1,4 +1,4 @@
-import '../db/server_database.dart' show User;
+import 'package:dev_challenge_2_dart/db/server_database.dart' show User;
 
 abstract interface class UsersRepository {
   Future<int> createUser(User user);

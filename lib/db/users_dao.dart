@@ -1,7 +1,7 @@
+import 'package:dev_challenge_2_dart/db/server_database.dart'
+    show $UsersTable, ServerDatabase, User;
+import 'package:dev_challenge_2_dart/db/users_table.dart' show Users;
 import 'package:drift/drift.dart' show DatabaseAccessor, DriftAccessor;
-
-import 'server_database.dart' show $UsersTable, ServerDatabase, User;
-import 'users_table.dart' show Users;
 
 part 'users_dao.g.dart';
 
